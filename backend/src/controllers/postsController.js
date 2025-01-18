@@ -16,7 +16,7 @@ const createPost = async (req, res) => {
 
 const getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate("user", "username email");
+        const posts = await Post.find().populate("user", "username email").populate("comments.user", "username email");
         res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch posts" });
