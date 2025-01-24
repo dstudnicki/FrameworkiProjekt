@@ -7,6 +7,7 @@ const protectedRoute = require("./routes/protectedRoute");
 const postsRoutes = require("./routes/posts");
 const photosRoutes = require("./routes/photos");
 const userRoutes = require("./routes/user");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,7 +20,7 @@ app.use("/auth", authRoutes);
 app.use("/protected", protectedRoute);
 app.use("/posts", postsRoutes);
 app.use("/photos", photosRoutes);
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/user", userRoutes);
 
 app.listen(PORT, () => {

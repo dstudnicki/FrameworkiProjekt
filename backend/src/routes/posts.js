@@ -6,9 +6,9 @@ const { addComment, deleteComments, getComments } = require("../controllers/comm
 const router = express.Router();
 
 router.get("/", getAllPosts);
-router.get("/user/:userId", getPostsByUser);
 router.post("/", authMiddleware, createPost);
 router.delete("/:id", authMiddleware, deletePost);
+router.get("/user/:userId", getPostsByUser);
 
 router.get("/:postId/comments", getComments);
 router.post("/:postId/comments", authMiddleware, addComment);

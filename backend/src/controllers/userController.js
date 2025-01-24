@@ -7,18 +7,24 @@ const getUserProfile = async (req, res) => {
     try {
         const { username } = req.params;
 
-        const user = await User.findOne({ username }).select("-password");
+        let user;
+
+        if (username) {
+            user = await User.findOne({ username }).select("-password");
+        } else {
+            user = await User.findById(req.userId).select("-password");
+        }
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
 
         const posts = await Post.find({ user: user._id });
-        const photos = await Photo.find({ user: req.userId });
+        const photos = await Photo.find({ user: user._id });
 
-        res.status(201).json({ user, posts, photos });
+        res.status(200).json({ user, posts, photos });
     } catch (error) {
-        res.status(500).json({ error: "Failed to display data", message: error.message });
+        res.status(500).json({ error: "Failed to fetch user profile", message: error.message });
     }
 };
 
