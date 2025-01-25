@@ -1,13 +1,70 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../../hooks/useAuth";
+import { Link } from "react-router-dom";
 
 const RegisterContainer = styled.div`
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 2rem;
-  background-color: #fff;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 27rem;
+  margin: 100px auto;
+  padding: 1.5rem;
+  border: 1px solid;
+  border-radius: 1rem;
+  border-color: #E1E0E9;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+`;
+
+const RegisterSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 1.5rem;
+
+    `;
+
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+`;
+
+const InputContainer = styled.div`
+    display: grid;
+    gap: 0.35rem;
+`;
+
+const Label = styled.label`
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
+`;
+
+const Input = styled.input`
+    display: flex;
+    height: 2.5rem;
+    border: 1px solid #E1E0E9;
+    border-radius: 0.375rem;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+    padding: 0 0.5rem;
+`;
+
+const Button = styled.button`
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    font-size: medium;
+    width: 100%;
+    background-color: #1D1C24;
+    color: #fff;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+`;
+
+const RegisterContent = styled.div`
+display: flex;
+justify-content: center;
+gap: 0.5rem;
 `;
 
 const Register = () => {
@@ -25,22 +82,29 @@ const Register = () => {
 
     return (
         <RegisterContainer>
-            <h2>Register</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Username:</label>
-                    <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
-                </div>
-                <div>
-                    <label>Email:</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <div>
-                    <label>Password:</label>
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                <button type="submit">Register</button>
-            </form>
+            <RegisterSection>
+                <h1>Register</h1>
+                <p>Provide your credentials below to register your account</p>
+            </RegisterSection>
+            <Form onSubmit={handleSubmit}>
+                <InputContainer>
+                    <Label>Username</Label>
+                    <Input type="email" value={username} onChange={(e) => setUsername(e.target.value)} />
+                </InputContainer>
+                <InputContainer>
+                    <Label>Email</Label>
+                    <Input type="password" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
+                </InputContainer>
+                <InputContainer>
+                    <Label>Password</Label>
+                    <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                </InputContainer>
+                <Button type="submit">Login</Button>
+                <RegisterContent>
+                    Already have an account?
+                    <Link to="/register">Sign in</Link>
+                </RegisterContent>
+            </Form>
         </RegisterContainer>
     );
 };

@@ -8,35 +8,14 @@ import PhotosPage from "./routes/PhotosPage";
 import PhotoUploadPage from "./routes/PhotoUploadPage";
 import UserProfilePage from "./routes/UserProfilePage";
 import AddPostPage from "./routes/AddPostPage";
+import Navbar from "./components/Navbar/Navbar";
 
 function App() {
     return (
         <>
             <GlobalStyles />
             <Router>
-                <nav style={{ padding: "16px", backgroundColor: "#f0f0f0" }}>
-                    <a href="/login" style={{ margin: "0 8px" }}>
-                        Login
-                    </a>
-                    <a href="/register" style={{ margin: "0 8px" }}>
-                        Register
-                    </a>
-                    <a href="/posts" style={{ margin: "0 8px" }}>
-                        Posts
-                    </a>
-                    <a href="/post/add" style={{ margin: "0 8px" }}>
-                        Add Post
-                    </a>
-                    <a href="/photos" style={{ margin: "0 8px" }}>
-                        Photos
-                    </a>
-                    <a href="/photos/upload" style={{ margin: "0 8px" }}>
-                        Upload Photo
-                    </a>
-                    <a href="/profile" style={{ margin: "0 8px" }}>
-                        Profile
-                    </a>
-                </nav>
+                <Navbar />
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />

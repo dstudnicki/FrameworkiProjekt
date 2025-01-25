@@ -18,7 +18,6 @@ interface Post {
 
 const PostList = () => {
     const [posts, setPosts] = useState<Post[]>([]);
-    console.log(posts);
 
     useEffect(() => {
         const fetchPosts = async () => {
