@@ -21,7 +21,7 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/posts" element={<PostsPage />} />
                     <Route path="/photos" element={<PhotosPage />} />
-                    <Route path="/photos/upload" element={<PhotoUploadPage />} />
+                    <Route path="/photo/upload" element={<PhotoUploadPage />} />
                     <Route path="/post/add" element={<AddPostPage />} />
                     <Route path="/profile" element={<UserProfilePage />} />
                 </Routes>

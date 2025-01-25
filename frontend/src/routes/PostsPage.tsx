@@ -3,10 +3,9 @@ import PostList from "../components/Posts/PostList";
 
 const PostsPage = () => {
     return (
-        <div>
-            <h1>Posts</h1>
+        <>
             <PostList />
-        </div>
+        </>
     );
 };
 

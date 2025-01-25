@@ -3,7 +3,13 @@ import styled from "styled-components";
 import { api } from "../../services/api";
 
 const PostContainer = styled.div`
-  padding: 2rem;
+  max-width: 27rem;
+  margin: 100px auto;
+  padding: 1.5rem;
+  border: 1px solid;
+  border-radius: 1rem;
+  border-color: #E1E0E9;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 `;
 
 interface Post {

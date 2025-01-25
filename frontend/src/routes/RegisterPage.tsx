@@ -3,9 +3,9 @@ import Register from "../components/Auth/Register";
 
 const RegisterPage = () => {
     return (
-        <div>
+        <>
             <Register />
-        </div>
+        </>
     );
 };
 
