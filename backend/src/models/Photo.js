@@ -1,6 +1,23 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
+const commentSchema = new Schema({
+    content: {
+        type: String,
+        required: [true, "Please provide content"],
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        indedx: true,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+});
+
 const photoSchema = new Schema({
     filename: {
         type: String,
@@ -14,6 +31,7 @@ const photoSchema = new Schema({
         ref: "User",
         required: true,
     },
+    comments: [commentSchema],
     createdAt: {
         type: Date,
         default: Date.now,

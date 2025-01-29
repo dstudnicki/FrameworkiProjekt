@@ -1,18 +1,18 @@
-const Post = require("../models/Post");
+const Photo = require("../models/Photo");
 
 const addComment = async (req, res) => {
     try {
-        const { postId } = req.params;
+        const { photoId } = req.params;
         const { content } = req.body;
 
         if (!content) {
             return res.status(400).json({ error: "Please provide content" });
         }
 
-        const post = await Post.findById(postId);
+        const photo = await Photo.findById(photoId);
 
-        if (!post) {
-            return res.status(404).json({ error: "Post not found" });
+        if (!photo) {
+            return res.status(404).json({ error: "Photo not found" });
         }
 
         const comment = {
@@ -21,26 +21,26 @@ const addComment = async (req, res) => {
             createdAt: new Date(),
         };
 
-        post.comments.push(comment);
+        photo.comments.push(comment);
 
-        await post.save();
+        await photo.save();
 
         res.status(201).json({ message: "Comment added succesfully", comment });
     } catch (error) {
-        res.status(500).json({ error: "Failed to delete comment", message: error.message });
+        res.status(500).json({ error: "Failed to add comment", message: error.message });
     }
 };
 
 const deleteComments = async (req, res) => {
     try {
-        const { postId, commentId } = req.params;
-        const post = await Post.findById(postId);
+        const { photoId, commentId } = req.params;
+        const photo = await Photo.findById(photoId);
 
-        if (!post) {
-            return res.status(404).json({ error: "Post not found" });
+        if (!photo) {
+            return res.status(404).json({ error: "Photo not found" });
         }
 
-        const comment = post.comments.id(commentId);
+        const comment = photo.comments.id(commentId);
 
         if (!comment) {
             return res.status(404).json({ error: "Comment not found" });
@@ -50,8 +50,8 @@ const deleteComments = async (req, res) => {
             return res.status(403).json({ error: "Unauthorized to delete this comment" });
         }
 
-        post.comments = post.comments.filter((c) => c._id.toString() !== commentId);
-        await post.save();
+        photo.comments = photo.comments.filter((c) => c._id.toString() !== commentId);
+        await photo.save();
 
         res.status(200).json({ message: "Comment deleted successfully" });
     } catch (error) {
@@ -61,14 +61,14 @@ const deleteComments = async (req, res) => {
 
 const getComments = async (req, res) => {
     try {
-        const { postId } = req.params;
+        const { photoId } = req.params;
 
-        const post = await Post.findById(postId).populate("comments.user", "username email");
-        if (!post) {
-            return res.status(404).json({ error: "Post not found" });
+        const photo = await Photo.findById(photoId).populate("comments.user", "username email");
+        if (!photo) {
+            return res.status(404).json({ error: "Photo not found" });
         }
 
-        res.status(200).json(post.comments);
+        res.status(200).json(photo.comments);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch comments", message: error.message });
     }

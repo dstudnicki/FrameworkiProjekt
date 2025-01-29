@@ -1,6 +1,4 @@
 const Photo = require("../models/Photo");
-const authMiddleware = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware");
 
 const uploadPhoto = async (req, res) => {
     try {
