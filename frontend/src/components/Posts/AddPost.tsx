@@ -77,7 +77,7 @@ const AddPost = () => {
         try {
             await api.post("/posts", postData, {
                 headers: {
-                    "Content-Type": "application/json", // Set the content type to JSON
+                    "Content-Type": "application/json",
                 },
             });
         } catch (error) {
@@ -101,7 +101,7 @@ const AddPost = () => {
                     <Label>Content</Label>
                     <Input type="text" value={content} onChange={(e) => setContent(e.target.value)} required />
                 </InputContainer>
-                <Button type="submit">Upload</Button>
+                <Button type="submit">Add</Button>
             </Form>
         </PostContainer>
     );

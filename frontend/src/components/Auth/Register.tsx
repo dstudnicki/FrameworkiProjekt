@@ -89,20 +89,20 @@ const Register = () => {
             <Form onSubmit={handleSubmit}>
                 <InputContainer>
                     <Label>Username</Label>
-                    <Input type="email" value={username} onChange={(e) => setUsername(e.target.value)} />
+                    <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
                 </InputContainer>
                 <InputContainer>
                     <Label>Email</Label>
-                    <Input type="password" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
                 </InputContainer>
                 <InputContainer>
                     <Label>Password</Label>
                     <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </InputContainer>
-                <Button type="submit">Login</Button>
+                <Button type="submit">Register</Button>
                 <RegisterContent>
                     Already have an account?
-                    <Link to="/register">Sign in</Link>
+                    <Link to="/login">Sign in</Link>
                 </RegisterContent>
             </Form>
         </RegisterContainer>
