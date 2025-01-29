@@ -2,6 +2,25 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { api } from "../../services/api";
 
+interface Post {
+    _id: string;
+    title: string;
+    content: string;
+    user: {
+        username: string;
+    };
+    createdAt: string;
+}
+
+interface Comment {
+    _id: string;
+    content: string;
+    user: {
+        username: string;
+    };
+    createdAt: string;
+}
+
 const PostContainer = styled.article`
   max-width: 30rem;
   margin: 40px auto;
@@ -63,26 +82,6 @@ const CommentsWrapper = styled.div`
     }
 
 `;
-
-interface Post {
-    _id: string;
-    title: string;
-    content: string;
-    user: {
-        username: string;
-    };
-    createdAt: string;
-}
-
-interface Comment {
-    _id: string;
-    postId: Post["_id"];
-    content: string;
-    user: {
-        username: string;
-    };
-    createdAt: string;
-}
 
 const AddCommentForm = styled.form`
     display: flex;
@@ -169,15 +168,6 @@ const PostList = () => {
                 console.error("Error fetching posts or comments:", error);
             }
         };
-
-        // const addComment = async (postId: string) => {
-        //     try {
-        //         await api.post(`/posts/${postId}/comments`, { content });
-        //         fetchPostsAndComments();
-        //     } catch (error) {
-        //         console.error("Failed to add comment:", error);
-        //     }
-        // }
 
         fetchPostsAndComments();
     }, []);

@@ -3,7 +3,7 @@ import { api } from "../services/api";
 import { useNavigate } from "react-router";
 
 export const useAuth = () => {
-    const [user, setUser] = useState<{ username: string; email: string } | null>(null);
+    const [user, setUser] = useState<{ _id: string; username: string; email: string } | null>(null);
     const navigate = useNavigate();
 
     // Login function

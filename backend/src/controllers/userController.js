@@ -33,9 +33,16 @@ const updateUserProfile = async (req, res) => {
         const userId = req.userId;
         const { username, email, password } = req.body;
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const updateFields = {};
+        if (username) updateFields.username = username;
+        if (email) updateFields.email = email;
+        if (password) updateFields.password = await bcrypt.hash(password, 10);
 
-        const updateUser = await User.findByIdAndUpdate(userId, { username, email, password: hashedPassword }, { new: true, runValidators: true });
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({ error: "No fields provided for update" });
+        }
+
+        const updateUser = await User.findByIdAndUpdate(userId, updateFields, { new: true, runValidators: true });
 
         if (!updateUser) {
             return res.status(404).json({ error: "User not found" });
