@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../../hooks/useAuth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const LoginContainer = styled.div`
   max-width: 27rem;
@@ -70,14 +70,11 @@ const Login = () => {
     const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await login(email, password);
-            // After login, navigate to a different page to force component remount
-            navigate("/posts", { replace: true }); // Navigate to posts or any other page
         } catch (error) {
             console.error("Login failed:", error);
         }
@@ -92,7 +89,7 @@ const Login = () => {
             <Form onSubmit={handleSubmit}>
                 <InputContainer>
                     <Label>Email</Label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="johndoe@example.com" />
                 </InputContainer>
                 <InputContainer>
                     <Label>Password</Label>

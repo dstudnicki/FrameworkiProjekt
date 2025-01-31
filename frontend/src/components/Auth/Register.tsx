@@ -69,16 +69,30 @@ gap: 0.5rem;
 
 const Register = () => {
     const { register } = useAuth();
+    const { login } = useAuth();
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        register(username, email, password);
-        alert("Registered successfully!");
-        console.log(username, email, password);
+        try {
+            await register(username, email, password);
+            await login(email, password);
+        } catch (error) {
+            console.error("Login failed:", error);
+        }
     };
+
+    //    const handleSubmit = async (e: React.FormEvent) => {
+    //         e.preventDefault();
+    //         try {
+    //             await login(email, password);
+    //             navigate("/posts", { replace: true });
+    //         } catch (error) {
+    //             console.error("Login failed:", error);
+    //         }
+    //     };
 
     return (
         <RegisterContainer>
@@ -93,7 +107,7 @@ const Register = () => {
                 </InputContainer>
                 <InputContainer>
                     <Label>Email</Label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="johndoe@example.com" />
                 </InputContainer>
                 <InputContainer>
                     <Label>Password</Label>

@@ -23,7 +23,7 @@ function App() {
                     <Route path="/photos" element={<PhotosPage />} />
                     <Route path="/photo/upload" element={<PhotoUploadPage />} />
                     <Route path="/post/add" element={<AddPostPage />} />
-                    <Route path="/profile" element={<UserProfilePage />} />
+                    <Route path="/:username" element={<UserProfilePage />} />
                 </Routes>
             </Router>
         </>

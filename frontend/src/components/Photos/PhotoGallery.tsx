@@ -104,7 +104,7 @@ const Input = styled.input`
   border: 1px solid #E1E0E9;
   border-radius: 0.375rem;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
-  text-align: center;
+  padding: 0 0.5rem;
 `;
 
 const Button = styled.button`

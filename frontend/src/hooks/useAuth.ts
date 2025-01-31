@@ -16,7 +16,7 @@ export const useAuth = () => {
             localStorage.setItem("tokenExpiration", expirationTime.toString()); // Store expiration timestamp
             setTokenExpiry(); // Set up the token expiration timeout
             await fetchMyProfile(); // Fetch your profile after login
-            navigate("/posts", { replace: true }); // Navigate to posts or any other page
+            navigate("/", { replace: true }); // Navigate to posts or any other page
             window.location.reload(); // Reload the page to reflect the logged-in state
         } catch (error) {
             console.error("Login failed:", error);

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 
 const Navbar = () => {
-    const { logout } = useAuth();
+    const { logout, user, fetchMyProfile } = useAuth();
+    console.log(user?.username);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
     // Function to check authentication status
@@ -22,7 +23,7 @@ const Navbar = () => {
     useEffect(() => {
         // Listen for storage changes (i.e., token being added/removed)
         const onStorageChange = () => handleAuthentication();
-
+        fetchMyProfile(); // Fetch user profile data
         // Check on initial load
         handleAuthentication();
 
@@ -112,7 +113,7 @@ const Navbar = () => {
                     {isAuthenticated ? (
                         <>
                             <NavLi>
-                                <Link to="/profile">Profile</Link>
+                                <Link to={user?.username || "#"}>Profile</Link>
                             </NavLi>
                             <NavLi>
                                 <Button onClick={handleLogout}>Log out</Button>
