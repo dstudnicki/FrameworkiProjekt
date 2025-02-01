@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { api } from "../../services/api";
+import { api } from "../services/api";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+
+interface Post {
+    _id: string;
+    title: string;
+    content: string;
+    user: {
+        _id: string | undefined;
+        username: string;
+    };
+    createdAt: string;
+}
 
 interface Photo {
     _id: string;
@@ -32,10 +43,10 @@ interface User {
 
 interface Data {
     user: User;
-    photo: Photo[];
+    posts: Post[];
+    photos: Photo[];
 }
-
-const PhotoContainer = styled.article`
+const PostContainer = styled.article`
   max-width: 30rem;
   margin: 40px auto;
   border: 1px solid;
@@ -53,7 +64,7 @@ const PhotoContainer = styled.article`
   }
 `;
 
-const PhotoWrapper = styled.div`
+const PostWrapper = styled.div`
   display: flex;
   flex-direction: column;
   padding: 0 1.5rem 1.5rem;
@@ -65,18 +76,11 @@ const UserContent = styled.div`
   gap: 0.5rem;
 `;
 
-const PhotoContent = styled.div`
+const PostContent = styled.div`
   display: flex;
   flex-direction: column;
   padding-top: 1rem;
   gap: 0.5rem;
-
-  img {
-    max-width: 450px;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  }
 `;
 
 const CommentsWrapper = styled.div`
@@ -137,11 +141,14 @@ const Button = styled.button`
     }
 `;
 
-const PhotoGallery = () => {
+const HomePage = () => {
     const [profileUser, setProfileUser] = useState<Data | null>(null);
+    const [posts, setPosts] = useState<Post[]>([]);
     const [photos, setPhotos] = useState<Photo[]>([]);
+    const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});
+    const [commentInputsByPost, setCommentInputsByPost] = useState<Record<string, string>>({});
     const [commentsByPhoto, setCommentsByPhoto] = useState<Record<string, Comment[]>>({});
-    const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+    const [commentInputsByPhoto, setCommentInputsByPhoto] = useState<Record<string, string>>({});
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
     useEffect(() => {
@@ -185,10 +192,35 @@ const PhotoGallery = () => {
         }
     }, [profileUser]);
 
-    const addComment = async (photoId: string, e: React.FormEvent) => {
+    const addCommentPost = async (postId: string, e: React.FormEvent) => {
+        e.preventDefault(); // Prevent default form submission
+
+        const content = commentInputsByPost[postId]?.trim();
+        if (!content) return;
+
+        try {
+            await api.post(`/posts/${postId}/comments`, { content });
+
+            // Fetch updated comments for the specific post
+            const { data: updatedComments } = await api.get(`/posts/${postId}/comments`);
+            setCommentsByPost((prev) => ({
+                ...prev,
+                [postId]: updatedComments,
+            }));
+
+            setCommentInputsByPhoto((prev) => ({
+                ...prev,
+                [postId]: "",
+            })); // Clear input field after submission
+        } catch (error) {
+            console.error("Failed to add comment:", error);
+        }
+    };
+
+    const addCommentPhoto = async (photoId: string, e: React.FormEvent) => {
         e.preventDefault();
 
-        const content = commentInputs[photoId]?.trim();
+        const content = commentInputsByPhoto[photoId]?.trim();
         if (!content) return;
 
         try {
@@ -200,7 +232,7 @@ const PhotoGallery = () => {
                 [photoId]: updatedComments,
             }));
 
-            setCommentInputs((prev) => ({
+            setCommentInputsByPhoto((prev) => ({
                 ...prev,
                 [photoId]: "",
             }));
@@ -210,26 +242,60 @@ const PhotoGallery = () => {
     };
 
     useEffect(() => {
-        const fetchPhotosAndComments = async () => {
+        const fetchPostsPhotosAndComments = async () => {
             try {
+                // Fetch all posts
+
+                const { data: posts } = await api.get("/posts");
                 const { data: photos } = await api.get("/photos");
+                setPosts(posts);
                 setPhotos(photos);
 
-                const commentsPromises = photos.map((photo: Photo) => api.get(`/photos/${photo._id}/comments`));
-                const commentsResponses = await Promise.all(commentsPromises);
+                // Fetch comments for all posts
+                const commentsPromisesPosts = posts.map((post: Post) => api.get(`/posts/${post._id}/comments`));
+                const commentsResponsesPosts = await Promise.all(commentsPromisesPosts);
 
-                const commentsData: Record<string, Comment[]> = {};
-                commentsResponses.forEach((response, index) => {
-                    commentsData[photos[index]._id] = response.data;
+                const commentsPromisesPhotos = photos.map((photo: Photo) => api.get(`/photos/${photo._id}/comments`));
+                const commentsResponsesPhotos = await Promise.all(commentsPromisesPhotos);
+
+                // Map comments to their corresponding post
+                const commentsDataPosts: Record<string, Comment[]> = {};
+                commentsResponsesPosts.forEach((response, index) => {
+                    commentsDataPosts[posts[index]._id] = response.data;
                 });
 
-                setCommentsByPhoto(commentsData);
+                const commentsDataPhotos: Record<string, Comment[]> = {};
+                commentsResponsesPhotos.forEach((response, index) => {
+                    commentsDataPhotos[photos[index]._id] = response.data;
+                });
+
+                setCommentsByPost(commentsDataPosts);
+                setCommentsByPhoto(commentsDataPhotos);
             } catch (error) {
-                console.error("Error fetching photos or comments:", error);
+                console.error("Error fetching posts or comments:", error);
             }
         };
-        fetchPhotosAndComments();
+
+        fetchPostsPhotosAndComments();
     }, []);
+
+    const deleteCommentPost = async (postId: string, commentId: string) => {
+        try {
+            // Make the API request to delete the comment
+            await api.delete(`/posts/${postId}/comments/${commentId}`);
+
+            // After successful deletion, filter out the deleted comment from the state
+            setCommentsByPost((prev) => {
+                const updatedComments = prev[postId]?.filter((comment) => comment._id !== commentId);
+                return {
+                    ...prev,
+                    [postId]: updatedComments || [],
+                };
+            });
+        } catch (error) {
+            console.error("Failed to delete comment:", error);
+        }
+    };
 
     const deleteCommentPhoto = async (photoId: string, commentId: string) => {
         try {
@@ -250,9 +316,78 @@ const PhotoGallery = () => {
     };
 
     return (
-        <PhotoContainer>
+        <PostContainer>
+            {posts.map((post) => (
+                <PostWrapper key={post._id}>
+                    <UserContent>
+                        <Link to={`/${post.user.username}`}>
+                            <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
+                        </Link>
+                        <Link to={`/${post.user.username}`}>
+                            <strong>@{post.user.username}</strong>
+                        </Link>
+                    </UserContent>
+                    <PostContent>
+                        <h3>{post.title}</h3>
+                        <p>{post.content}</p>
+                    </PostContent>
+                    <span className="text">
+                        {new Intl.DateTimeFormat("en-US", {
+                            hour: "numeric",
+                            minute: "numeric",
+                            hour12: true,
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                        }).format(new Date(post.createdAt))}
+                    </span>
+
+                    {/* Display all comments for the post */}
+                    <CommentsWrapper>
+                        <AddCommentForm onSubmit={(e) => addCommentPost(post._id, e)}>
+                            <Input
+                                type="text"
+                                value={commentInputsByPost[post._id] || ""}
+                                onChange={(e) =>
+                                    setCommentInputsByPost((prev) => ({
+                                        ...prev,
+                                        [post._id]: e.target.value,
+                                    }))
+                                }
+                                placeholder="Add a comment"
+                            />
+                            <Button type="submit">
+                                <img className="invert" width="16px" height="16px" src={process.env.PUBLIC_URL + "/send.png"} alt="send" />
+                            </Button>
+                        </AddCommentForm>
+                        {commentsByPost[post._id]?.map((comment) => (
+                            <div className="comment" key={comment._id}>
+                                <Link to={`/${post.user.username}`}>
+                                    <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
+                                </Link>
+                                <div className="comment-content">
+                                    <div>
+                                        <Link to={`/${post.user.username}`}>
+                                            <strong>@{comment.user.username} </strong>{" "}
+                                        </Link>
+                                        <span>· </span>
+                                        <span className="text-muted">
+                                            {new Intl.DateTimeFormat("en-US", {
+                                                month: "short",
+                                                day: "numeric",
+                                            }).format(new Date(post.createdAt))}
+                                        </span>
+                                    </div>
+                                    <p>{comment.content}</p>
+                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(post._id, comment._id)}>Delete</Button>}
+                                </div>
+                            </div>
+                        ))}
+                    </CommentsWrapper>
+                </PostWrapper>
+            ))}
             {photos.map((photo) => (
-                <PhotoWrapper key={photo._id}>
+                <PostWrapper key={photo._id}>
                     <UserContent>
                         <Link to={`/${photo.user.username}`}>
                             <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
@@ -261,10 +396,10 @@ const PhotoGallery = () => {
                             <strong>@{photo.user.username}</strong>
                         </Link>
                     </UserContent>
-                    <PhotoContent>
+                    <PostContent>
                         <h3>{photo.description}</h3>
                         <img src={`http://localhost:5000/uploads/${photo.filename}`} alt={photo.description} />
-                    </PhotoContent>
+                    </PostContent>
                     <span className="text">
                         {new Intl.DateTimeFormat("en-US", {
                             hour: "numeric",
@@ -277,12 +412,12 @@ const PhotoGallery = () => {
                     </span>
 
                     <CommentsWrapper>
-                        <AddCommentForm onSubmit={(e) => addComment(photo._id, e)}>
+                        <AddCommentForm onSubmit={(e) => addCommentPhoto(photo._id, e)}>
                             <Input
                                 type="text"
-                                value={commentInputs[photo._id] || ""}
+                                value={commentInputsByPhoto[photo._id] || ""}
                                 onChange={(e) =>
-                                    setCommentInputs((prev) => ({
+                                    setCommentInputsByPhoto((prev) => ({
                                         ...prev,
                                         [photo._id]: e.target.value,
                                     }))
@@ -313,10 +448,10 @@ const PhotoGallery = () => {
                             </div>
                         ))}
                     </CommentsWrapper>
-                </PhotoWrapper>
+                </PostWrapper>
             ))}
-        </PhotoContainer>
+        </PostContainer>
     );
 };
 
-export default PhotoGallery;
+export default HomePage;

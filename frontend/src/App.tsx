@@ -10,6 +10,7 @@ import UserProfilePage from "./routes/UserProfilePage";
 import AddPostPage from "./routes/AddPostPage";
 import Navbar from "./components/Navbar/Navbar";
 import UserEditProfilePage from "./routes/UserEditProfilePage";
+import HomePage from "./routes/HomePage";
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
             <Router>
                 <Navbar />
                 <Routes>
+                    <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/posts" element={<PostsPage />} />

@@ -96,6 +96,9 @@ const Navbar = () => {
             <MainNav>
                 <LeftGroup>
                     <NavLi>
+                        <Link to="/">Home</Link>
+                    </NavLi>
+                    <NavLi>
                         <Link to="/posts">Posts</Link>
                     </NavLi>
                     <NavLi>
