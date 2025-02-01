@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { api } from "../../services/api";
+import { Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 interface Post {
     _id: string;
     title: string;
     content: string;
     user: {
+        _id: string | undefined;
         username: string;
     };
     createdAt: string;
@@ -21,6 +24,16 @@ interface Comment {
     createdAt: string;
 }
 
+interface User {
+    _id: string;
+    username: string;
+    email: string;
+}
+
+interface Data {
+    user: User;
+    posts: Post[];
+}
 const PostContainer = styled.article`
   max-width: 30rem;
   margin: 40px auto;
@@ -117,9 +130,52 @@ const Button = styled.button`
 `;
 
 const PostList = () => {
+    const [profileUser, setProfileUser] = useState<Data | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});
     const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (token) {
+                    const decoded: any = jwtDecode(token);
+                    const userId = decoded?.userId;
+                    const { data: user } = await api.get(`/user/id/${userId}`);
+                    setProfileUser(user);
+                }
+            } catch (error) {
+                console.error("Invalid token", error);
+                setIsAuthenticated(false);
+            }
+        };
+        fetchUserData();
+    }, []);
+
+    const handleAuthentication = () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const decoded: any = jwtDecode(token); // Decode the token
+                const tokenId = decoded?.userId;
+                const userId = profileUser?.user?._id;
+                setIsAuthenticated(tokenId === userId);
+            } catch (error) {
+                console.error("Invalid token", error);
+                setIsAuthenticated(false);
+            }
+        } else {
+            setIsAuthenticated(false);
+        }
+    };
+
+    useEffect(() => {
+        if (profileUser) {
+            handleAuthentication();
+        }
+    }, [profileUser]);
 
     const addComment = async (postId: string, e: React.FormEvent) => {
         e.preventDefault(); // Prevent default form submission
@@ -172,13 +228,35 @@ const PostList = () => {
         fetchPostsAndComments();
     }, []);
 
+    const deleteCommentPost = async (postId: string, commentId: string) => {
+        try {
+            // Make the API request to delete the comment
+            await api.delete(`/posts/${postId}/comments/${commentId}`);
+
+            // After successful deletion, filter out the deleted comment from the state
+            setCommentsByPost((prev) => {
+                const updatedComments = prev[postId]?.filter((comment) => comment._id !== commentId);
+                return {
+                    ...prev,
+                    [postId]: updatedComments || [],
+                };
+            });
+        } catch (error) {
+            console.error("Failed to delete comment:", error);
+        }
+    };
+
     return (
         <PostContainer>
             {posts.map((post) => (
                 <PostWrapper key={post._id}>
                     <UserContent>
-                        <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
-                        <strong>@{post.user.username}</strong>
+                        <Link to={`/${post.user.username}`}>
+                            <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
+                        </Link>
+                        <Link to={`/${post.user.username}`}>
+                            <strong>@{post.user.username}</strong>
+                        </Link>
                     </UserContent>
                     <PostContent>
                         <h3>{post.title}</h3>
@@ -215,10 +293,14 @@ const PostList = () => {
                         </AddCommentForm>
                         {commentsByPost[post._id]?.map((comment) => (
                             <div className="comment" key={comment._id}>
-                                <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
+                                <Link to={`/${post.user.username}`}>
+                                    <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
+                                </Link>
                                 <div className="comment-content">
                                     <div>
-                                        <strong>@{comment.user.username} </strong>
+                                        <Link to={`/${post.user.username}`}>
+                                            <strong>@{comment.user.username} </strong>{" "}
+                                        </Link>
                                         <span>· </span>
                                         <span className="text-muted">
                                             {new Intl.DateTimeFormat("en-US", {
@@ -228,6 +310,7 @@ const PostList = () => {
                                         </span>
                                     </div>
                                     <p>{comment.content}</p>
+                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(post._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}

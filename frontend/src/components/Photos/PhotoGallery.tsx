@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { api } from "../../services/api";
+import { Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 interface Photo {
     _id: string;
@@ -20,6 +22,17 @@ interface Comment {
         username: string;
     };
     createdAt: string;
+}
+
+interface User {
+    _id: string;
+    username: string;
+    email: string;
+}
+
+interface Data {
+    user: User;
+    photo: Photo;
 }
 
 const PhotoContainer = styled.article`
@@ -125,9 +138,52 @@ const Button = styled.button`
 `;
 
 const PhotoGallery = () => {
+    const [profileUser, setProfileUser] = useState<Data | null>(null);
     const [photos, setPhotos] = useState<Photo[]>([]);
     const [commentsByPhoto, setCommentsByPhoto] = useState<Record<string, Comment[]>>({});
     const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (token) {
+                    const decoded: any = jwtDecode(token);
+                    const userId = decoded?.userId;
+                    const { data: user } = await api.get(`/user/id/${userId}`);
+                    setProfileUser(user);
+                }
+            } catch (error) {
+                console.error("Invalid token", error);
+                setIsAuthenticated(false);
+            }
+        };
+        fetchUserData();
+    }, []);
+
+    const handleAuthentication = () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const decoded: any = jwtDecode(token); // Decode the token
+                const tokenId = decoded?.userId;
+                const userId = profileUser?.user?._id;
+                setIsAuthenticated(tokenId === userId);
+            } catch (error) {
+                console.error("Invalid token", error);
+                setIsAuthenticated(false);
+            }
+        } else {
+            setIsAuthenticated(false);
+        }
+    };
+
+    useEffect(() => {
+        if (profileUser) {
+            handleAuthentication();
+        }
+    }, [profileUser]);
 
     const addComment = async (photoId: string, e: React.FormEvent) => {
         e.preventDefault();
@@ -175,13 +231,35 @@ const PhotoGallery = () => {
         fetchPhotosAndComments();
     }, []);
 
+    const deleteCommentPhoto = async (photoId: string, commentId: string) => {
+        try {
+            // Make the API request to delete the comment
+            await api.delete(`/photos/${photoId}/comments/${commentId}`);
+
+            // After successful deletion, filter out the deleted comment from the state
+            setCommentsByPhoto((prev) => {
+                const updatedComments = prev[photoId]?.filter((comment) => comment._id !== commentId);
+                return {
+                    ...prev,
+                    [photoId]: updatedComments || [],
+                };
+            });
+        } catch (error) {
+            console.error("Failed to delete comment:", error);
+        }
+    };
+
     return (
         <PhotoContainer>
             {photos.map((photo) => (
                 <PhotoWrapper key={photo._id}>
                     <UserContent>
-                        <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
-                        <strong>@{photo.user.username}</strong>
+                        <Link to={`/${photo.user.username}`}>
+                            <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
+                        </Link>
+                        <Link to={`/${photo.user.username}`}>
+                            <strong>@{photo.user.username}</strong>
+                        </Link>
                     </UserContent>
                     <PhotoContent>
                         <h3>{photo.description}</h3>
@@ -230,6 +308,7 @@ const PhotoGallery = () => {
                                         </span>
                                     </div>
                                     <p>{comment.content}</p>
+                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPhoto(photo._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}

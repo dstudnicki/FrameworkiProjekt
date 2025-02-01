@@ -2,17 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../services/api";
-
-interface Post {
-    _id: string;
-    title: string;
-    content: string;
-    user: {
-        _id: string;
-        username: string;
-    };
-    createdAt: string;
-}
+import { useNavigate } from "react-router";
 
 const ProfileContainer = styled.div`
   max-width: 30rem;
@@ -73,6 +63,8 @@ const Button = styled.button`
 const UserEditProfile = () => {
     const { user, fetchMyProfile } = useAuth();
     const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+    console.log(formData);
+    const navigate = useNavigate();
 
     // Fetch user data once
     useEffect(() => {
@@ -100,7 +92,7 @@ const UserEditProfile = () => {
             await api.put(`/user/edit/${user?._id}`, formData, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             });
-            alert("Profile updated successfully");
+            navigate(`/${formData.username}`);
         } catch (error) {
             console.error("Update failed:", error);
         }

@@ -28,6 +28,25 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+const getUserProfileById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await User.findById(id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const posts = await Post.find({ user: user._id });
+        const photos = await Photo.find({ user: user._id });
+
+        res.status(200).json({ user, posts, photos });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch user profile", message: error.message });
+    }
+};
+
 const updateUserProfile = async (req, res) => {
     try {
         const userId = req.userId;
@@ -57,4 +76,5 @@ const updateUserProfile = async (req, res) => {
 module.exports = {
     getUserProfile,
     updateUserProfile,
+    getUserProfileById,
 };

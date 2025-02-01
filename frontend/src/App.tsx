@@ -9,6 +9,7 @@ import PhotoUploadPage from "./routes/PhotoUploadPage";
 import UserProfilePage from "./routes/UserProfilePage";
 import AddPostPage from "./routes/AddPostPage";
 import Navbar from "./components/Navbar/Navbar";
+import UserEditProfilePage from "./routes/UserEditProfilePage";
 
 function App() {
     return (
@@ -24,6 +25,7 @@ function App() {
                     <Route path="/photo/upload" element={<PhotoUploadPage />} />
                     <Route path="/post/add" element={<AddPostPage />} />
                     <Route path="/:username" element={<UserProfilePage />} />
+                    <Route path="/:username/edit" element={<UserEditProfilePage />} />
                 </Routes>
             </Router>
         </>

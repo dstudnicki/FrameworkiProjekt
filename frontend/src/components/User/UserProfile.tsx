@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../services/api";
+import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 interface Post {
     _id: string;
@@ -33,6 +35,18 @@ interface Comment {
         username: string;
     };
     createdAt: string;
+}
+
+interface User {
+    _id: string;
+    username: string;
+    email: string;
+}
+
+interface Data {
+    user: User;
+    posts: Post[];
+    photos: Photo[];
 }
 
 const PostContainer = styled.article`
@@ -70,6 +84,13 @@ const PostContent = styled.div`
   flex-direction: column;
   padding-top: 1rem;
   gap: 0.5rem;
+
+  img {
+    max-width: 450px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const CommentsWrapper = styled.div`
@@ -131,31 +152,60 @@ const Button = styled.button`
 `;
 
 const UserProfile = () => {
-    const { user, fetchMyProfile } = useAuth();
+    const { username } = useParams<{ username: string }>();
+    const [profileUser, setProfileUser] = useState<Data | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [photos, setPhotos] = useState<Photo[]>([]);
     const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});
     const [commentInputsPost, setCommentInputsPost] = useState<Record<string, string>>({});
     const [commentsByPhoto, setCommentsByPhoto] = useState<Record<string, Comment[]>>({});
     const [commentInputsPhoto, setCommentInputsPhoto] = useState<Record<string, string>>({});
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
     // Fetch user data once
     useEffect(() => {
         const fetchUserData = async () => {
-            await fetchMyProfile(); // Fetch profile data
+            try {
+                const { data: user } = await api.get(`/user/${username}`);
+                setProfileUser(user);
+            } catch (error) {} // Fetch profile data
         };
 
         fetchUserData();
-    }, []);
+    }, [username]);
+
+    const handleAuthentication = () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const decoded: any = jwtDecode(token); // Decode the token
+                const tokenId = decoded?.userId;
+                const userId = profileUser?.user?._id;
+                setIsAuthenticated(tokenId === userId); // Compare token username with URL username
+            } catch (error) {
+                console.error("Invalid token", error);
+                setIsAuthenticated(false);
+            }
+        } else {
+            setIsAuthenticated(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchPostsAndComments = async () => {
+        if (profileUser) {
+            handleAuthentication();
+        }
+    }, [profileUser]);
+
+    useEffect(() => {
+        const fetchPostsPhotosAndComments = async () => {
+            if (!profileUser) return;
+
             try {
                 // Fetch all posts
-                const { data: posts } = await api.get("/posts");
-                const { data: photos } = await api.get("/photos");
-                const userPosts = posts.filter((post: Post) => post.user._id === user?._id);
-                const userPhotos = photos.filter((photo: Photo) => photo.user._id === user?._id);
+
+                const userPosts = profileUser?.posts || [];
+                const userPhotos = profileUser?.photos || [];
                 setPosts(userPosts);
                 setPhotos(userPhotos);
 
@@ -184,8 +234,8 @@ const UserProfile = () => {
             }
         };
 
-        fetchPostsAndComments();
-    }, [user]);
+        fetchPostsPhotosAndComments();
+    }, [photos, posts, profileUser]);
 
     const addCommentPost = async (postId: string, e: React.FormEvent) => {
         e.preventDefault(); // Prevent default form submission
@@ -236,13 +286,55 @@ const UserProfile = () => {
         }
     };
 
+    const deleteCommentPost = async (postId: string, commentId: string) => {
+        try {
+            // Make the API request to delete the comment
+            await api.delete(`/posts/${postId}/comments/${commentId}`);
+
+            // After successful deletion, filter out the deleted comment from the state
+            setCommentsByPost((prev) => {
+                const updatedComments = prev[postId]?.filter((comment) => comment._id !== commentId);
+                return {
+                    ...prev,
+                    [postId]: updatedComments || [],
+                };
+            });
+        } catch (error) {
+            console.error("Failed to delete comment:", error);
+        }
+    };
+
+    const deleteCommentPhoto = async (photoId: string, commentId: string) => {
+        try {
+            // Make the API request to delete the comment
+            await api.delete(`/photos/${photoId}/comments/${commentId}`);
+
+            // After successful deletion, filter out the deleted comment from the state
+            setCommentsByPhoto((prev) => {
+                const updatedComments = prev[photoId]?.filter((comment) => comment._id !== commentId);
+                return {
+                    ...prev,
+                    [photoId]: updatedComments || [],
+                };
+            });
+            console.log(photoId, commentId);
+        } catch (error) {
+            console.error("Failed to delete comment:", error);
+        }
+    };
+
     return (
         <PostContainer>
             {posts.map((post) => (
                 <PostWrapper key={post._id}>
                     <UserContent>
                         <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
-                        <strong>@{post.user.username}</strong>
+                        <strong>@{profileUser?.user.username}</strong>
+                        {isAuthenticated ? (
+                            <Link to={`/${profileUser?.user.username}/edit`}>
+                                <Button>Edit</Button>
+                            </Link>
+                        ) : null}
                     </UserContent>
                     <PostContent>
                         <h3>{post.title}</h3>
@@ -288,10 +380,11 @@ const UserProfile = () => {
                                             {new Intl.DateTimeFormat("en-US", {
                                                 month: "short",
                                                 day: "numeric",
-                                            }).format(new Date(post.createdAt))}
+                                            }).format(new Date(comment.createdAt))}
                                         </span>
                                     </div>
                                     <p>{comment.content}</p>
+                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(post._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}
@@ -302,7 +395,7 @@ const UserProfile = () => {
                 <PostWrapper key={photo._id}>
                     <UserContent>
                         <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
-                        <strong>@{photo.user.username}</strong>
+                        <strong>@{profileUser?.user.username}</strong>
                     </UserContent>
                     <PostContent>
                         <h3>{photo.description}</h3>
@@ -351,6 +444,7 @@ const UserProfile = () => {
                                         </span>
                                     </div>
                                     <p>{comment.content}</p>
+                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPhoto(photo._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}
