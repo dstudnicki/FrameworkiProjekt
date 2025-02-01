@@ -323,134 +323,144 @@ const UserProfile = () => {
         }
     };
 
+    const mergedData = [...posts, ...photos].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     return (
         <PostContainer>
-            {posts.map((post) => (
-                <PostWrapper key={post._id}>
-                    <UserContent>
-                        <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
-                        <strong>@{profileUser?.user.username}</strong>
-                        {isAuthenticated ? (
-                            <Link to={`/${profileUser?.user.username}/edit`}>
-                                <Button>Edit</Button>
+            {mergedData.map((item) =>
+                "title" in item ? (
+                    // Render post
+                    <PostWrapper key={item._id}>
+                        <UserContent>
+                            <Link to={`/${profileUser?.user.username}`}>
+                                <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
                             </Link>
-                        ) : null}
-                    </UserContent>
-                    <PostContent>
-                        <h3>{post.title}</h3>
-                        <p>{post.content}</p>
-                    </PostContent>
-                    <span className="text">
-                        {new Intl.DateTimeFormat("en-US", {
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                        }).format(new Date(post.createdAt))}
-                    </span>
-
-                    {/* Display all comments for the post */}
-                    <CommentsWrapper>
-                        <AddCommentForm onSubmit={(e) => addCommentPost(post._id, e)}>
-                            <Input
-                                type="text"
-                                value={commentInputsPost[post._id] || ""}
-                                onChange={(e) =>
-                                    setCommentInputsPost((prev) => ({
-                                        ...prev,
-                                        [post._id]: e.target.value,
-                                    }))
-                                }
-                                placeholder="Add a comment"
-                            />
-                            <Button type="submit">
-                                <img className="invert" width="16px" height="16px" src={process.env.PUBLIC_URL + "/send.png"} alt="send" />
-                            </Button>
-                        </AddCommentForm>
-                        {commentsByPost[post._id]?.map((comment) => (
-                            <div className="comment" key={comment._id}>
-                                <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
-                                <div className="comment-content">
-                                    <div>
-                                        <strong>@{comment.user.username} </strong>
-                                        <span>· </span>
-                                        <span className="text-muted">
-                                            {new Intl.DateTimeFormat("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                            }).format(new Date(comment.createdAt))}
-                                        </span>
+                            <Link to={`/${profileUser?.user.username}`}>
+                                <strong>@{profileUser?.user.username}</strong>
+                            </Link>
+                        </UserContent>
+                        <PostContent>
+                            <h3>{item.title}</h3>
+                            <p>{item.content}</p>
+                        </PostContent>
+                        <span className="text">
+                            {new Intl.DateTimeFormat("en-US", {
+                                hour: "numeric",
+                                minute: "numeric",
+                                hour12: true,
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                            }).format(new Date(item.createdAt))}
+                        </span>
+                        <CommentsWrapper>
+                            <AddCommentForm onSubmit={(e) => addCommentPost(item._id, e)}>
+                                <Input
+                                    type="text"
+                                    value={commentInputsPost[item._id] || ""}
+                                    onChange={(e) =>
+                                        setCommentInputsPost((prev) => ({
+                                            ...prev,
+                                            [item._id]: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Add a comment"
+                                />
+                                <Button type="submit">
+                                    <img className="invert" width="16px" height="16px" src={process.env.PUBLIC_URL + "/send.png"} alt="send" />
+                                </Button>
+                            </AddCommentForm>
+                            {commentsByPost[item._id]?.map((comment) => (
+                                <div className="comment" key={comment._id}>
+                                    <Link to={`/${item.user.username}`}>
+                                        <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
+                                    </Link>
+                                    <div className="comment-content">
+                                        <div>
+                                            <Link to={`/${item.user.username}`}>
+                                                <strong>@{comment.user.username} </strong>{" "}
+                                            </Link>
+                                            <span>· </span>
+                                            <span className="text-muted">
+                                                {new Intl.DateTimeFormat("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                }).format(new Date(item.createdAt))}
+                                            </span>
+                                        </div>
+                                        <p>{comment.content}</p>
+                                        {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(item._id, comment._id)}>Delete</Button>}
                                     </div>
-                                    <p>{comment.content}</p>
-                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(post._id, comment._id)}>Delete</Button>}
                                 </div>
-                            </div>
-                        ))}
-                    </CommentsWrapper>
-                </PostWrapper>
-            ))}
-            {photos.map((photo) => (
-                <PostWrapper key={photo._id}>
-                    <UserContent>
-                        <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
-                        <strong>@{profileUser?.user.username}</strong>
-                    </UserContent>
-                    <PostContent>
-                        <h3>{photo.description}</h3>
-                        <img src={`http://localhost:5000/uploads/${photo.filename}`} alt={photo.description} />
-                    </PostContent>
-                    <span className="text">
-                        {new Intl.DateTimeFormat("en-US", {
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                        }).format(new Date(photo.createdAt))}
-                    </span>
+                            ))}
+                        </CommentsWrapper>
+                    </PostWrapper>
+                ) : (
+                    // Render photo
+                    <PostWrapper key={item._id}>
+                        <UserContent>
+                            <Link to={`/${profileUser?.user.username}`}>
+                                <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/user.png"} alt="user" />
+                            </Link>
+                            <Link to={`/${profileUser?.user.username}`}>
+                                <strong>@{profileUser?.user.username}</strong>
+                            </Link>
+                        </UserContent>
+                        <PostContent>
+                            <h3>{item.description}</h3>
+                            <img src={`http://localhost:5000/uploads/${item.filename}`} alt={item.description} />
+                        </PostContent>
+                        <span className="text">
+                            {new Intl.DateTimeFormat("en-US", {
+                                hour: "numeric",
+                                minute: "numeric",
+                                hour12: true,
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                            }).format(new Date(item.createdAt))}
+                        </span>
 
-                    <CommentsWrapper>
-                        <AddCommentForm onSubmit={(e) => addCommentPhoto(photo._id, e)}>
-                            <Input
-                                type="text"
-                                value={commentInputsPhoto[photo._id] || ""}
-                                onChange={(e) =>
-                                    setCommentInputsPhoto((prev) => ({
-                                        ...prev,
-                                        [photo._id]: e.target.value,
-                                    }))
-                                }
-                                placeholder="Add a comment"
-                            />
-                            <Button type="submit">
-                                <img className="invert" width="16px" height="16px" src={process.env.PUBLIC_URL + "/send.png"} alt="send" />
-                            </Button>
-                        </AddCommentForm>
-                        {commentsByPhoto[photo._id]?.map((comment) => (
-                            <div className="comment" key={comment._id}>
-                                <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
-                                <div className="comment-content">
-                                    <div>
-                                        <strong>@{comment.user.username} </strong>
-                                        <span>· </span>
-                                        <span className="text-muted">
-                                            {new Intl.DateTimeFormat("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                            }).format(new Date(photo.createdAt))}
-                                        </span>
+                        <CommentsWrapper>
+                            <AddCommentForm onSubmit={(e) => addCommentPhoto(item._id, e)}>
+                                <Input
+                                    type="text"
+                                    value={commentInputsPhoto[item._id] || ""}
+                                    onChange={(e) =>
+                                        setCommentInputsPhoto((prev) => ({
+                                            ...prev,
+                                            [item._id]: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Add a comment"
+                                />
+                                <Button type="submit">
+                                    <img className="invert" width="16px" height="16px" src={process.env.PUBLIC_URL + "/send.png"} alt="send" />
+                                </Button>
+                            </AddCommentForm>
+                            {commentsByPhoto[item._id]?.map((comment) => (
+                                <div className="comment" key={comment._id}>
+                                    <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
+                                    <div className="comment-content">
+                                        <div>
+                                            <strong>@{comment.user.username} </strong>
+                                            <span>· </span>
+                                            <span className="text-muted">
+                                                {new Intl.DateTimeFormat("en-US", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                }).format(new Date(item.createdAt))}
+                                            </span>
+                                        </div>
+                                        <p>{comment.content}</p>
+                                        {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPhoto(item._id, comment._id)}>Delete</Button>}
                                     </div>
-                                    <p>{comment.content}</p>
-                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPhoto(photo._id, comment._id)}>Delete</Button>}
                                 </div>
-                            </div>
-                        ))}
-                    </CommentsWrapper>
-                </PostWrapper>
-            ))}
+                            ))}
+                        </CommentsWrapper>
+                    </PostWrapper>
+                )
+            )}
         </PostContainer>
     );
 };

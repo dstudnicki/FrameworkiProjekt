@@ -213,7 +213,8 @@ const PhotoGallery = () => {
         const fetchPhotosAndComments = async () => {
             try {
                 const { data: photos } = await api.get("/photos");
-                setPhotos(photos);
+                const sortedPhotos = photos.sort((a: Photo, b: Photo) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setPhotos(sortedPhotos);
 
                 const commentsPromises = photos.map((photo: Photo) => api.get(`/photos/${photo._id}/comments`));
                 const commentsResponses = await Promise.all(commentsPromises);

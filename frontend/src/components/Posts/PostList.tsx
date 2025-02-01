@@ -207,7 +207,8 @@ const PostList = () => {
             try {
                 // Fetch all posts
                 const { data: posts } = await api.get("/posts");
-                setPosts(posts);
+                const sortedPosts = posts.sort((a: Post, b: Post) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setPosts(sortedPosts);
 
                 // Fetch comments for all posts
                 const commentsPromises = posts.map((post: Post) => api.get(`/posts/${post._id}/comments`));
