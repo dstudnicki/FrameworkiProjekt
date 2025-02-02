@@ -9,7 +9,7 @@ interface Photo {
     description: string;
     filename: string;
     user: {
-        email: string;
+        _id: string;
         username: string;
     };
     createdAt: string;
@@ -19,6 +19,7 @@ interface Comment {
     _id: string;
     content: string;
     user: {
+        _id: string;
         username: string;
     };
     createdAt: string;
@@ -250,6 +251,16 @@ const PhotoGallery = () => {
         }
     };
 
+    const deletePhoto = async (photoId: string) => {
+        try {
+            await api.delete(`/photos/${photoId}`);
+
+            setPhotos((prev) => prev.filter((photo) => photo._id !== photoId));
+        } catch (error) {
+            console.error("Failed to delete photo:", error);
+        }
+    };
+
     return (
         <PhotoContainer>
             {photos.map((photo) => (
@@ -261,6 +272,7 @@ const PhotoGallery = () => {
                         <Link to={`/${photo.user.username}`}>
                             <strong>@{photo.user.username}</strong>
                         </Link>
+                        {isAuthenticated && photo.user._id === profileUser?.user._id && <Button onClick={() => deletePhoto(photo._id)}>Delete</Button>}
                     </UserContent>
                     <PhotoContent>
                         <h3>{photo.description}</h3>
@@ -309,7 +321,7 @@ const PhotoGallery = () => {
                                         </span>
                                     </div>
                                     <p>{comment.content}</p>
-                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPhoto(photo._id, comment._id)}>Delete</Button>}
+                                    {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPhoto(photo._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}

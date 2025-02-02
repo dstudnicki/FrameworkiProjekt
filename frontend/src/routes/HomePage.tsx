@@ -20,7 +20,7 @@ interface Photo {
     description: string;
     filename: string;
     user: {
-        email: string;
+        _id: string | undefined;
         username: string;
     };
     createdAt: string;
@@ -30,6 +30,7 @@ interface Comment {
     _id: string;
     content: string;
     user: {
+        _id: string;
         username: string;
     };
     createdAt: string;
@@ -315,6 +316,26 @@ const HomePage = () => {
         }
     };
 
+    const deletePost = async (postId: string) => {
+        try {
+            await api.delete(`/posts/${postId}`);
+
+            setPosts((prev) => prev.filter((post) => post._id !== postId));
+        } catch (error) {
+            console.error("Failed to delete post:", error);
+        }
+    };
+
+    const deletePhoto = async (photoId: string) => {
+        try {
+            await api.delete(`/photos/${photoId}`);
+
+            setPhotos((prev) => prev.filter((photo) => photo._id !== photoId));
+        } catch (error) {
+            console.error("Failed to delete photo:", error);
+        }
+    };
+
     const mergedData = [...posts, ...photos].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return (
@@ -330,6 +351,7 @@ const HomePage = () => {
                             <Link to={`/${item.user.username}`}>
                                 <strong>@{item.user.username}</strong>
                             </Link>
+                            {isAuthenticated && item.user._id === profileUser?.user._id && <Button onClick={() => deletePost(item._id)}>Delete</Button>}
                         </UserContent>
                         <PostContent>
                             <h3>{item.title}</h3>
@@ -381,7 +403,7 @@ const HomePage = () => {
                                             </span>
                                         </div>
                                         <p>{comment.content}</p>
-                                        {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(item._id, comment._id)}>Delete</Button>}
+                                        {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPost(item._id, comment._id)}>Delete</Button>}
                                     </div>
                                 </div>
                             ))}
@@ -397,6 +419,7 @@ const HomePage = () => {
                             <Link to={`/${item.user.username}`}>
                                 <strong>@{item.user.username}</strong>
                             </Link>
+                            {isAuthenticated && item.user._id === profileUser?.user._id && <Button onClick={() => deletePhoto(item._id)}>Delete</Button>}
                         </UserContent>
                         <PostContent>
                             <h3>{item.description}</h3>
@@ -445,7 +468,7 @@ const HomePage = () => {
                                             </span>
                                         </div>
                                         <p>{comment.content}</p>
-                                        {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPhoto(item._id, comment._id)}>Delete</Button>}
+                                        {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPhoto(item._id, comment._id)}>Delete</Button>}
                                     </div>
                                 </div>
                             ))}

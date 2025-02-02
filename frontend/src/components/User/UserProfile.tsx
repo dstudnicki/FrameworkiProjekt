@@ -22,7 +22,6 @@ interface Photo {
     filename: string;
     user: {
         _id: string | undefined;
-        email: string;
         username: string;
     };
     createdAt: string;
@@ -32,6 +31,7 @@ interface Comment {
     _id: string;
     content: string;
     user: {
+        _id: string | undefined;
         username: string;
     };
     createdAt: string;
@@ -235,7 +235,7 @@ const UserProfile = () => {
         };
 
         fetchPostsPhotosAndComments();
-    }, [photos, posts, profileUser]);
+    }, [profileUser]);
 
     const addCommentPost = async (postId: string, e: React.FormEvent) => {
         e.preventDefault(); // Prevent default form submission
@@ -317,9 +317,28 @@ const UserProfile = () => {
                     [photoId]: updatedComments || [],
                 };
             });
-            console.log(photoId, commentId);
         } catch (error) {
             console.error("Failed to delete comment:", error);
+        }
+    };
+
+    const deletePost = async (postId: string) => {
+        try {
+            await api.delete(`/posts/${postId}`);
+
+            setPosts((prev) => prev.filter((post) => post._id !== postId));
+        } catch (error) {
+            console.error("Failed to delete post:", error);
+        }
+    };
+
+    const deletePhoto = async (photoId: string) => {
+        try {
+            await api.delete(`/photos/${photoId}`);
+
+            setPhotos((prev) => prev.filter((photo) => photo._id !== photoId));
+        } catch (error) {
+            console.error("Failed to delete photo:", error);
         }
     };
 
@@ -338,6 +357,7 @@ const UserProfile = () => {
                             <Link to={`/${profileUser?.user.username}`}>
                                 <strong>@{profileUser?.user.username}</strong>
                             </Link>
+                            {isAuthenticated && item.user.toString() === profileUser?.user._id && <Button onClick={() => deletePost(item._id)}>Delete</Button>}
                         </UserContent>
                         <PostContent>
                             <h3>{item.title}</h3>
@@ -389,7 +409,7 @@ const UserProfile = () => {
                                             </span>
                                         </div>
                                         <p>{comment.content}</p>
-                                        {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(item._id, comment._id)}>Delete</Button>}
+                                        {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPost(item._id, comment._id)}>Delete</Button>}
                                     </div>
                                 </div>
                             ))}
@@ -405,6 +425,7 @@ const UserProfile = () => {
                             <Link to={`/${profileUser?.user.username}`}>
                                 <strong>@{profileUser?.user.username}</strong>
                             </Link>
+                            {isAuthenticated && item.user.toString() === profileUser?.user._id && <Button onClick={() => deletePhoto(item._id)}>Delete</Button>}
                         </UserContent>
                         <PostContent>
                             <h3>{item.description}</h3>
@@ -453,7 +474,7 @@ const UserProfile = () => {
                                             </span>
                                         </div>
                                         <p>{comment.content}</p>
-                                        {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPhoto(item._id, comment._id)}>Delete</Button>}
+                                        {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPhoto(item._id, comment._id)}>Delete</Button>}
                                     </div>
                                 </div>
                             ))}

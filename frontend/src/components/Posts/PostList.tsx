@@ -19,6 +19,7 @@ interface Comment {
     _id: string;
     content: string;
     user: {
+        _id: string;
         username: string;
     };
     createdAt: string;
@@ -247,6 +248,16 @@ const PostList = () => {
         }
     };
 
+    const deletePost = async (postId: string) => {
+        try {
+            await api.delete(`/posts/${postId}`);
+
+            setPosts((prev) => prev.filter((post) => post._id !== postId));
+        } catch (error) {
+            console.error("Failed to delete post:", error);
+        }
+    };
+
     return (
         <PostContainer>
             {posts.map((post) => (
@@ -258,6 +269,7 @@ const PostList = () => {
                         <Link to={`/${post.user.username}`}>
                             <strong>@{post.user.username}</strong>
                         </Link>
+                        {isAuthenticated && post.user._id === profileUser?.user._id && <Button onClick={() => deletePost(post._id)}>Delete</Button>}
                     </UserContent>
                     <PostContent>
                         <h3>{post.title}</h3>
@@ -311,7 +323,7 @@ const PostList = () => {
                                         </span>
                                     </div>
                                     <p>{comment.content}</p>
-                                    {isAuthenticated && comment.user.username === profileUser?.user.username && <Button onClick={() => deleteCommentPost(post._id, comment._id)}>Delete</Button>}
+                                    {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPost(post._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}
