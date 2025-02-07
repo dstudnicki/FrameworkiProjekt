@@ -103,6 +103,12 @@ const CommentsWrapper = styled.div`
     gap: 0.25rem;
   }
 
+  .comment-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
     .text-muted {
         color: #696969;
     }
@@ -142,6 +148,14 @@ const Button = styled.button`
     }
 `;
 
+const ButtonIcon = styled.button`
+   background-color: #FFFFFF;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+
+`;
+
 const HomePage = () => {
     const [profileUser, setProfileUser] = useState<Data | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
@@ -174,7 +188,7 @@ const HomePage = () => {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                const decoded: any = jwtDecode(token); // Decode the token
+                const decoded: any = jwtDecode(token);
                 const tokenId = decoded?.userId;
                 const userId = profileUser?.user?._id;
                 setIsAuthenticated(tokenId === userId);
@@ -194,7 +208,7 @@ const HomePage = () => {
     }, [profileUser]);
 
     const addCommentPost = async (postId: string, e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault();
 
         const content = commentInputsByPost[postId]?.trim();
         if (!content) return;
@@ -202,7 +216,6 @@ const HomePage = () => {
         try {
             await api.post(`/posts/${postId}/comments`, { content });
 
-            // Fetch updated comments for the specific post
             const { data: updatedComments } = await api.get(`/posts/${postId}/comments`);
             setCommentsByPost((prev) => ({
                 ...prev,
@@ -212,7 +225,7 @@ const HomePage = () => {
             setCommentInputsByPhoto((prev) => ({
                 ...prev,
                 [postId]: "",
-            })); // Clear input field after submission
+            }));
         } catch (error) {
             console.error("Failed to add comment:", error);
         }
@@ -245,21 +258,17 @@ const HomePage = () => {
     useEffect(() => {
         const fetchPostsPhotosAndComments = async () => {
             try {
-                // Fetch all posts
-
                 const { data: posts } = await api.get("/posts");
                 const { data: photos } = await api.get("/photos");
                 setPosts(posts);
                 setPhotos(photos);
 
-                // Fetch comments for all posts
                 const commentsPromisesPosts = posts.map((post: Post) => api.get(`/posts/${post._id}/comments`));
                 const commentsResponsesPosts = await Promise.all(commentsPromisesPosts);
 
                 const commentsPromisesPhotos = photos.map((photo: Photo) => api.get(`/photos/${photo._id}/comments`));
                 const commentsResponsesPhotos = await Promise.all(commentsPromisesPhotos);
 
-                // Map comments to their corresponding post
                 const commentsDataPosts: Record<string, Comment[]> = {};
                 commentsResponsesPosts.forEach((response, index) => {
                     commentsDataPosts[posts[index]._id] = response.data;
@@ -282,10 +291,8 @@ const HomePage = () => {
 
     const deleteCommentPost = async (postId: string, commentId: string) => {
         try {
-            // Make the API request to delete the comment
             await api.delete(`/posts/${postId}/comments/${commentId}`);
 
-            // After successful deletion, filter out the deleted comment from the state
             setCommentsByPost((prev) => {
                 const updatedComments = prev[postId]?.filter((comment) => comment._id !== commentId);
                 return {
@@ -300,10 +307,8 @@ const HomePage = () => {
 
     const deleteCommentPhoto = async (photoId: string, commentId: string) => {
         try {
-            // Make the API request to delete the comment
             await api.delete(`/photos/${photoId}/comments/${commentId}`);
 
-            // After successful deletion, filter out the deleted comment from the state
             setCommentsByPhoto((prev) => {
                 const updatedComments = prev[photoId]?.filter((comment) => comment._id !== commentId);
                 return {
@@ -342,7 +347,6 @@ const HomePage = () => {
         <PostContainer>
             {mergedData.map((item) =>
                 "title" in item ? (
-                    // Render post
                     <PostWrapper key={item._id}>
                         <UserContent>
                             <Link to={`/${item.user.username}`}>
@@ -351,7 +355,11 @@ const HomePage = () => {
                             <Link to={`/${item.user.username}`}>
                                 <strong>@{item.user.username}</strong>
                             </Link>
-                            {isAuthenticated && item.user._id === profileUser?.user._id && <Button onClick={() => deletePost(item._id)}>Delete</Button>}
+                            {isAuthenticated && item.user._id === profileUser?.user._id && (
+                                <ButtonIcon onClick={() => deletePost(item._id)}>
+                                    <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                                </ButtonIcon>
+                            )}
                         </UserContent>
                         <PostContent>
                             <h3>{item.title}</h3>
@@ -390,27 +398,32 @@ const HomePage = () => {
                                         <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
                                     </Link>
                                     <div className="comment-content">
-                                        <div>
-                                            <Link to={`/${item.user.username}`}>
-                                                <strong>@{comment.user.username} </strong>{" "}
-                                            </Link>
-                                            <span>· </span>
-                                            <span className="text-muted">
-                                                {new Intl.DateTimeFormat("en-US", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                }).format(new Date(item.createdAt))}
-                                            </span>
+                                        <div className="comment-user">
+                                            <div>
+                                                <Link to={`/${item.user.username}`}>
+                                                    <strong>@{comment.user.username} </strong>
+                                                </Link>
+                                                <span>· </span>
+                                                <span className="text-muted">
+                                                    {new Intl.DateTimeFormat("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                    }).format(new Date(item.createdAt))}
+                                                </span>
+                                            </div>
+                                            {isAuthenticated && item.user._id === profileUser?.user._id && (
+                                                <ButtonIcon onClick={() => deleteCommentPost(item._id, comment._id)}>
+                                                    <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                                                </ButtonIcon>
+                                            )}
                                         </div>
                                         <p>{comment.content}</p>
-                                        {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPost(item._id, comment._id)}>Delete</Button>}
                                     </div>
                                 </div>
                             ))}
                         </CommentsWrapper>
                     </PostWrapper>
                 ) : (
-                    // Render photo
                     <PostWrapper key={item._id}>
                         <UserContent>
                             <Link to={`/${item.user.username}`}>
@@ -419,7 +432,11 @@ const HomePage = () => {
                             <Link to={`/${item.user.username}`}>
                                 <strong>@{item.user.username}</strong>
                             </Link>
-                            {isAuthenticated && item.user._id === profileUser?.user._id && <Button onClick={() => deletePhoto(item._id)}>Delete</Button>}
+                            {isAuthenticated && item.user._id === profileUser?.user._id && (
+                                <ButtonIcon onClick={() => deletePhoto(item._id)}>
+                                    <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                                </ButtonIcon>
+                            )}
                         </UserContent>
                         <PostContent>
                             <h3>{item.description}</h3>
@@ -457,7 +474,7 @@ const HomePage = () => {
                                 <div className="comment" key={comment._id}>
                                     <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
                                     <div className="comment-content">
-                                        <div>
+                                        <div className="comment-user">
                                             <strong>@{comment.user.username} </strong>
                                             <span>· </span>
                                             <span className="text-muted">
@@ -466,9 +483,13 @@ const HomePage = () => {
                                                     day: "numeric",
                                                 }).format(new Date(item.createdAt))}
                                             </span>
+                                            {isAuthenticated && item.user._id === profileUser?.user._id && (
+                                                <ButtonIcon onClick={() => deleteCommentPhoto(item._id, comment._id)}>
+                                                    <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                                                </ButtonIcon>
+                                            )}
                                         </div>
                                         <p>{comment.content}</p>
-                                        {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPhoto(item._id, comment._id)}>Delete</Button>}
                                     </div>
                                 </div>
                             ))}

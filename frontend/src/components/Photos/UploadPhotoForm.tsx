@@ -38,14 +38,10 @@ const Label = styled.label`
 `;
 
 const Input = styled.input`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 2.5rem;
-  border: 1px solid #E1E0E9;
-  border-radius: 0.375rem;
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-  padding: 0 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
 `;
 
 const Button = styled.button`
@@ -81,7 +77,6 @@ const UploadPhotoForm = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            alert("Photo uploaded successfully!");
         } catch (error) {
             console.error("Failed to upload photo:", error);
         }

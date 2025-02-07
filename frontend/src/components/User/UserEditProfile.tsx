@@ -66,16 +66,14 @@ const UserEditProfile = () => {
     console.log(formData);
     const navigate = useNavigate();
 
-    // Fetch user data once
     useEffect(() => {
         const fetchUserData = async () => {
-            await fetchMyProfile(); // Fetch profile data
+            await fetchMyProfile();
         };
 
         fetchUserData();
     }, []);
 
-    // Set form fields only when `user` is first available
     useEffect(() => {
         if (user && formData.username === "") {
             setFormData({ username: user.username, email: user.email, password: "" });

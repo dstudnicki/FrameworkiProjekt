@@ -34,15 +34,10 @@ const getPostsByUser = async (req, res) => {
 
 const deletePost = async (req, res) => {
     try {
-        console.log("Authenticated User ID:", req.userId);
-        console.log("Post ID to delete:", req.params.id);
-
         const post = await Post.findById(req.params.id);
         if (!post) {
             return res.status(404).json({ error: "Post not found" });
         }
-
-        console.log("Post Owner ID:", post.user.toString());
 
         if (post.user.toString() !== req.userId) {
             return res.status(403).json({ error: "Unauthorized to delete this post" });

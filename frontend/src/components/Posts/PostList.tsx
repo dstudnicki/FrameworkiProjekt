@@ -91,6 +91,12 @@ const CommentsWrapper = styled.div`
     gap: 0.25rem;
   }
 
+  .comment-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
     .text-muted {
         color: #696969;
     }
@@ -128,6 +134,14 @@ const Button = styled.button`
     .invert {
         filter: invert(1);
     }
+`;
+
+const ButtonIcon = styled.button`
+   background-color: #FFFFFF;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+
 `;
 
 const PostList = () => {
@@ -179,7 +193,7 @@ const PostList = () => {
     }, [profileUser]);
 
     const addComment = async (postId: string, e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault();
 
         const content = commentInputs[postId]?.trim();
         if (!content) return;
@@ -187,7 +201,6 @@ const PostList = () => {
         try {
             await api.post(`/posts/${postId}/comments`, { content });
 
-            // Fetch updated comments for the specific post
             const { data: updatedComments } = await api.get(`/posts/${postId}/comments`);
             setCommentsByPost((prev) => ({
                 ...prev,
@@ -197,7 +210,7 @@ const PostList = () => {
             setCommentInputs((prev) => ({
                 ...prev,
                 [postId]: "",
-            })); // Clear input field after submission
+            }));
         } catch (error) {
             console.error("Failed to add comment:", error);
         }
@@ -206,16 +219,13 @@ const PostList = () => {
     useEffect(() => {
         const fetchPostsAndComments = async () => {
             try {
-                // Fetch all posts
                 const { data: posts } = await api.get("/posts");
                 const sortedPosts = posts.sort((a: Post, b: Post) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setPosts(sortedPosts);
 
-                // Fetch comments for all posts
                 const commentsPromises = posts.map((post: Post) => api.get(`/posts/${post._id}/comments`));
                 const commentsResponses = await Promise.all(commentsPromises);
 
-                // Map comments to their corresponding post
                 const commentsData: Record<string, Comment[]> = {};
                 commentsResponses.forEach((response, index) => {
                     commentsData[posts[index]._id] = response.data;
@@ -232,10 +242,8 @@ const PostList = () => {
 
     const deleteCommentPost = async (postId: string, commentId: string) => {
         try {
-            // Make the API request to delete the comment
             await api.delete(`/posts/${postId}/comments/${commentId}`);
 
-            // After successful deletion, filter out the deleted comment from the state
             setCommentsByPost((prev) => {
                 const updatedComments = prev[postId]?.filter((comment) => comment._id !== commentId);
                 return {
@@ -269,7 +277,11 @@ const PostList = () => {
                         <Link to={`/${post.user.username}`}>
                             <strong>@{post.user.username}</strong>
                         </Link>
-                        {isAuthenticated && post.user._id === profileUser?.user._id && <Button onClick={() => deletePost(post._id)}>Delete</Button>}
+                        {isAuthenticated && post.user._id === profileUser?.user._id && (
+                            <ButtonIcon onClick={() => deletePost(post._id)}>
+                                <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                            </ButtonIcon>
+                        )}{" "}
                     </UserContent>
                     <PostContent>
                         <h3>{post.title}</h3>
@@ -286,7 +298,6 @@ const PostList = () => {
                         }).format(new Date(post.createdAt))}
                     </span>
 
-                    {/* Display all comments for the post */}
                     <CommentsWrapper>
                         <AddCommentForm onSubmit={(e) => addComment(post._id, e)}>
                             <Input
@@ -310,9 +321,9 @@ const PostList = () => {
                                     <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
                                 </Link>
                                 <div className="comment-content">
-                                    <div>
+                                    <div className="comment-user">
                                         <Link to={`/${post.user.username}`}>
-                                            <strong>@{comment.user.username} </strong>{" "}
+                                            <strong>@{comment.user.username} </strong>
                                         </Link>
                                         <span>· </span>
                                         <span className="text-muted">
@@ -321,9 +332,13 @@ const PostList = () => {
                                                 day: "numeric",
                                             }).format(new Date(post.createdAt))}
                                         </span>
+                                        {isAuthenticated && comment.user._id === profileUser?.user._id && (
+                                            <ButtonIcon onClick={() => deleteCommentPost(post._id, comment._id)}>
+                                                <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                                            </ButtonIcon>
+                                        )}
                                     </div>
                                     <p>{comment.content}</p>
-                                    {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPost(post._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}

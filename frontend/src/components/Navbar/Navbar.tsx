@@ -10,7 +10,7 @@ padding: 40px;
 const MainNav = styled.ul`
 list-style-type: none;
 display: flex;
-justify-content: space-between;
+justify-content: space-evenly;
 align-items: center;
 padding: 0;
 `;
@@ -63,29 +63,28 @@ const Navbar = () => {
     const { logout, user, fetchMyProfile } = useAuth();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-    // Function to check authentication status
-    const handleAuthentication = () => {
+    const handleAuthentication = async () => {
         const token = localStorage.getItem("token");
-        setIsAuthenticated(!!token); // Set true if token exists, false otherwise
+        if (token) {
+            await fetchMyProfile();
+            setIsAuthenticated(true);
+        } else {
+            setIsAuthenticated(false);
+        }
     };
 
     const handleLogout = () => {
         logout();
-        handleAuthentication(); // Check authentication after logout
+        handleAuthentication();
     };
 
-    // Run on component mount and whenever the token changes
     useEffect(() => {
-        // Listen for storage changes (i.e., token being added/removed)
         const onStorageChange = () => handleAuthentication();
-        fetchMyProfile(); // Fetch user profile data
-        // Check on initial load
+        user && fetchMyProfile();
         handleAuthentication();
 
-        // Add event listener to handle token change from other tabs
         window.addEventListener("storage", onStorageChange);
 
-        // Clean up the event listener on unmount
         return () => {
             window.removeEventListener("storage", onStorageChange);
         };

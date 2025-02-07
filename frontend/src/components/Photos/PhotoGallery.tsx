@@ -99,6 +99,12 @@ const CommentsWrapper = styled.div`
     gap: 0.25rem;
   }
 
+  .comment-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
     .text-muted {
         color: #696969;
     }
@@ -138,6 +144,14 @@ const Button = styled.button`
     }
 `;
 
+const ButtonIcon = styled.button`
+   background-color: #FFFFFF;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+
+`;
+
 const PhotoGallery = () => {
     const [profileUser, setProfileUser] = useState<Data | null>(null);
     const [photos, setPhotos] = useState<Photo[]>([]);
@@ -167,7 +181,7 @@ const PhotoGallery = () => {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                const decoded: any = jwtDecode(token); // Decode the token
+                const decoded: any = jwtDecode(token);
                 const tokenId = decoded?.userId;
                 const userId = profileUser?.user?._id;
                 setIsAuthenticated(tokenId === userId);
@@ -235,10 +249,8 @@ const PhotoGallery = () => {
 
     const deleteCommentPhoto = async (photoId: string, commentId: string) => {
         try {
-            // Make the API request to delete the comment
             await api.delete(`/photos/${photoId}/comments/${commentId}`);
 
-            // After successful deletion, filter out the deleted comment from the state
             setCommentsByPhoto((prev) => {
                 const updatedComments = prev[photoId]?.filter((comment) => comment._id !== commentId);
                 return {
@@ -272,7 +284,11 @@ const PhotoGallery = () => {
                         <Link to={`/${photo.user.username}`}>
                             <strong>@{photo.user.username}</strong>
                         </Link>
-                        {isAuthenticated && photo.user._id === profileUser?.user._id && <Button onClick={() => deletePhoto(photo._id)}>Delete</Button>}
+                        {isAuthenticated && photo.user._id === profileUser?.user._id && (
+                            <ButtonIcon onClick={() => deletePhoto(photo._id)}>
+                                <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                            </ButtonIcon>
+                        )}
                     </UserContent>
                     <PhotoContent>
                         <h3>{photo.description}</h3>
@@ -310,7 +326,7 @@ const PhotoGallery = () => {
                             <div className="comment" key={comment._id}>
                                 <img width="40px" height="40px" src={process.env.PUBLIC_URL + "/03.png"} alt="user" />
                                 <div className="comment-content">
-                                    <div>
+                                    <div className="comment-user">
                                         <strong>@{comment.user.username} </strong>
                                         <span>· </span>
                                         <span className="text-muted">
@@ -319,9 +335,13 @@ const PhotoGallery = () => {
                                                 day: "numeric",
                                             }).format(new Date(photo.createdAt))}
                                         </span>
+                                        {isAuthenticated && photo.user._id === profileUser?.user._id && (
+                                            <ButtonIcon onClick={() => deleteCommentPhoto(photo._id, comment._id)}>
+                                                <img width="16px" height="16px" src={process.env.PUBLIC_URL + "/delete.png"} alt="user" />
+                                            </ButtonIcon>
+                                        )}
                                     </div>
                                     <p>{comment.content}</p>
-                                    {isAuthenticated && comment.user._id === profileUser?.user._id && <Button onClick={() => deleteCommentPhoto(photo._id, comment._id)}>Delete</Button>}
                                 </div>
                             </div>
                         ))}

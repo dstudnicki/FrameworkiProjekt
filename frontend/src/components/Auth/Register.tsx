@@ -84,16 +84,6 @@ const Register = () => {
         }
     };
 
-    //    const handleSubmit = async (e: React.FormEvent) => {
-    //         e.preventDefault();
-    //         try {
-    //             await login(email, password);
-    //             navigate("/posts", { replace: true });
-    //         } catch (error) {
-    //             console.error("Login failed:", error);
-    //         }
-    //     };
-
     return (
         <RegisterContainer>
             <RegisterSection>
